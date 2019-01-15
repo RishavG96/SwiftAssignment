@@ -7,6 +7,8 @@
 //
 
 import UIKit
+import CoreData
+
 
 class EditViewController: UIViewController {
     
@@ -71,7 +73,36 @@ class EditViewController: UIViewController {
         guard var nameAndNum = nameAndNum, let indexOfContact = indexOfContact else{
             return
         }
+        
+        
+        let appDelegate = UIApplication.shared.delegate as? AppDelegate
+        let managedContext = appDelegate!.persistentContainer.viewContext
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName:"Contacts")
+        if let name  = nameAndNum[indexOfContact].name{
+            fetchRequest.predicate = NSPredicate(format: "name = %@", "\(name)")
+        }
+        do
+        {
+            let fetchedResults =  try managedContext.fetch(fetchRequest) as? [NSManagedObject]
+            
+            for entity in fetchedResults! {
+                
+                managedContext.delete(entity)
+            }
+        }
+        catch _ {
+            print("Could not delete")
+            
+        }
+        
+        do {
+            try managedContext.save()
+        } catch {
+            print("Failed saving")
+        }
+        
         nameAndNum.remove(at: indexOfContact)
+        
         self.navigationController?.popViewController(animated: true)
     }
     
